@@ -21,18 +21,30 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 
 class Alien(pygame.sprite.Sprite):
+    SPEED = 20
+
     def __init__(self):
         super().__init__()
         self.surf = pygame.image.load("alien.png").convert_alpha()
         self.rect = self.surf.get_rect(
             center=((SCREEN_WIDTH - self.surf.get_width()) / 2, SCREEN_HEIGHT - 100)
         )
+        self.direction = "right"
 
-    def update(self, direction):
-        if direction == "right":
-            self.rect.move_ip(5, 0)
-        elif direction == "left":
-            self.rect.move_ip(-5, 0)
+    def change_direction(self, new_direction):
+        if self.direction != new_direction:
+            self.surf = pygame.transform.flip(self.surf, True, False)
+            self.direction = new_direction
+
+    def update(self, move):
+        self.change_direction(move)
+
+        if move == "right":
+            if self.rect.x + (self.surf.get_width() / 2) + self.SPEED < SCREEN_WIDTH:
+                self.rect.move_ip(self.SPEED, 0)
+        elif move == "left":
+            if self.rect.x - self.SPEED > 0:
+                self.rect.move_ip(-self.SPEED, 0)
 
 
 mars = pygame.image.load("mars.png").convert()
@@ -49,9 +61,9 @@ while running:
             running = False
         if event.type == KEYDOWN:
             if event.key == pygame.K_LEFT or event.key == ord("a"):
-                alien.update(direction="left")
+                alien.update(move="left")
             if event.key == pygame.K_RIGHT or event.key == ord("d"):
-                alien.update(direction="right")
+                alien.update(move="right")
 
     screen.fill((0, 0, 0))
     screen.blit(mars, (0, 400))

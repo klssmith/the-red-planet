@@ -7,6 +7,7 @@ from pygame.locals import (
     K_LEFT,
     K_RIGHT,
     K_ESCAPE,
+    K_SPACE,
     KEYDOWN,
     QUIT,
 )
@@ -16,7 +17,9 @@ pygame.mouse.set_visible(False)
 
 SCREEN_HEIGHT = 600
 SCREEN_WIDTH = 800
+FPS = 60
 
+clock = pygame.time.Clock()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 
@@ -25,26 +28,46 @@ class Alien(pygame.sprite.Sprite):
 
     def __init__(self):
         super().__init__()
-        self.surf = pygame.image.load("alien.png").convert_alpha()
-        self.rect = self.surf.get_rect(
-            center=((SCREEN_WIDTH - self.surf.get_width()) / 2, SCREEN_HEIGHT - 100)
+        self.image = pygame.image.load("alien.png").convert_alpha()
+        self.rect = self.image.get_rect(
+            center=((SCREEN_WIDTH - self.image.get_width()) / 2, SCREEN_HEIGHT - 100)
         )
         self.direction = "right"
 
     def change_direction(self, new_direction):
         if self.direction != new_direction:
-            self.surf = pygame.transform.flip(self.surf, True, False)
+            self.image = pygame.transform.flip(self.image, True, False)
             self.direction = new_direction
 
     def update(self, move):
         self.change_direction(move)
 
         if move == "right":
-            if self.rect.x + (self.surf.get_width() / 2) + self.SPEED < SCREEN_WIDTH:
+            if self.rect.x + (self.image.get_width() / 2) + self.SPEED < SCREEN_WIDTH:
                 self.rect.move_ip(self.SPEED, 0)
         elif move == "left":
             if self.rect.x - self.SPEED > 0:
                 self.rect.move_ip(-self.SPEED, 0)
+
+
+class Ray(pygame.sprite.Sprite):
+    SPEED = 5
+
+    def __init__(self, x_pos, direction):
+        super().__init__()
+        self.image = pygame.Surface((5, 5))
+        self.image.fill((0, 255, 0))
+        self.rect = self.image.get_rect(x=x_pos, y=493)
+        self.direction = direction
+
+    def update(self):
+        if self.direction == "right":
+            self.rect.move_ip(self.SPEED, 0)
+        else:
+            self.rect.move_ip(-self.SPEED, 0)
+
+        if (self.rect.x < 0) or (self.rect.x > SCREEN_WIDTH):
+            self.kill()
 
 
 mars = pygame.image.load("mars.png").convert()
@@ -52,6 +75,7 @@ alien = Alien()
 
 all_sprites = pygame.sprite.Group()
 all_sprites.add(alien)
+rays = pygame.sprite.Group()
 
 running = True
 
@@ -60,18 +84,31 @@ while running:
         if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
             running = False
         if event.type == KEYDOWN:
-            if event.key == pygame.K_LEFT or event.key == ord("a"):
+            if event.key == K_LEFT or event.key == ord("a"):
                 alien.update(move="left")
-            if event.key == pygame.K_RIGHT or event.key == ord("d"):
+            if event.key == K_RIGHT or event.key == ord("d"):
                 alien.update(move="right")
+            if event.key == K_SPACE:
+                if alien.direction == "right":
+                    x_pos = alien.rect.right
+                else:
+                    x_pos = alien.rect.left
+                ray = Ray(x_pos, alien.direction)
+
+                rays.add(ray)
+                all_sprites.add(ray)
 
     screen.fill((0, 0, 0))
     screen.blit(mars, (0, 400))
 
-    for entity in all_sprites:
-        screen.blit(entity.surf, entity.rect)
+    for ray in rays:
+        ray.update()
+
+    for sprite in all_sprites:
+        screen.blit(sprite.image, sprite.rect)
 
     pygame.display.flip()
+    clock.tick(FPS)
 
 
 pygame.quit()

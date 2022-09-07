@@ -18,6 +18,8 @@ pygame.mouse.set_visible(False)
 SCREEN_HEIGHT = 600
 SCREEN_WIDTH = 800
 FPS = 60
+RIGHT = 1
+LEFT = -1
 
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -32,22 +34,22 @@ class Alien(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(
             center=((SCREEN_WIDTH - self.image.get_width()) / 2, SCREEN_HEIGHT - 100)
         )
-        self.direction = "right"
+        self.direction = RIGHT
 
     def change_direction(self, new_direction):
         if self.direction != new_direction:
             self.image = pygame.transform.flip(self.image, True, False)
             self.direction = new_direction
 
-    def update(self, move):
-        self.change_direction(move)
+    def update(self, direction):
+        self.change_direction(direction)
 
-        if move == "right":
+        if direction == RIGHT:
             if self.rect.x + (self.image.get_width() / 2) + self.SPEED < SCREEN_WIDTH:
-                self.rect.move_ip(self.SPEED, 0)
-        elif move == "left":
+                self.rect.move_ip(self.SPEED * direction, 0)
+        elif direction == LEFT:
             if self.rect.x - self.SPEED > 0:
-                self.rect.move_ip(-self.SPEED, 0)
+                self.rect.move_ip(self.SPEED * direction, 0)
 
 
 class Ray(pygame.sprite.Sprite):
@@ -61,10 +63,7 @@ class Ray(pygame.sprite.Sprite):
         self.direction = direction
 
     def update(self):
-        if self.direction == "right":
-            self.rect.move_ip(self.SPEED, 0)
-        else:
-            self.rect.move_ip(-self.SPEED, 0)
+        self.rect.move_ip(self.SPEED * self.direction, 0)
 
         if (self.rect.x < 0) or (self.rect.x > SCREEN_WIDTH):
             self.kill()
@@ -85,11 +84,11 @@ while running:
             running = False
         if event.type == KEYDOWN:
             if event.key == K_LEFT or event.key == ord("a"):
-                alien.update(move="left")
+                alien.update(direction=LEFT)
             if event.key == K_RIGHT or event.key == ord("d"):
-                alien.update(move="right")
+                alien.update(direction=RIGHT)
             if event.key == K_SPACE:
-                if alien.direction == "right":
+                if alien.direction == RIGHT:
                     x_pos = alien.rect.right
                 else:
                     x_pos = alien.rect.left

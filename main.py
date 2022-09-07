@@ -1,9 +1,7 @@
-import sys
+import random
 
 import pygame
 from pygame.locals import (
-    K_UP,
-    K_DOWN,
     K_LEFT,
     K_RIGHT,
     K_ESCAPE,
@@ -32,7 +30,7 @@ class Alien(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.image.load("alien.png").convert_alpha()
         self.rect = self.image.get_rect(
-            center=((SCREEN_WIDTH - self.image.get_width()) / 2, SCREEN_HEIGHT - 100)
+            center=((SCREEN_WIDTH - self.image.get_width()) / 2, SCREEN_HEIGHT - 75)
         )
         self.direction = RIGHT
 
@@ -52,6 +50,23 @@ class Alien(pygame.sprite.Sprite):
                 self.rect.move_ip(self.SPEED * direction, 0)
 
 
+class Rover(pygame.sprite.Sprite):
+    SPEED = 3
+
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("rover.png")
+        self.direction = random.choice([RIGHT, LEFT])
+        self.rect = self.image.get_rect(y=SCREEN_HEIGHT - 85)
+        self.rect.x = 0 - self.rect.width if self.direction == RIGHT else SCREEN_WIDTH
+
+    def update(self):
+        self.rect.move_ip(self.SPEED * self.direction, 0)
+
+        if (self.rect.width < 0) or (self.rect.x > SCREEN_WIDTH):
+            self.kill()
+
+
 class Ray(pygame.sprite.Sprite):
     SPEED = 5
 
@@ -59,7 +74,7 @@ class Ray(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.Surface((5, 5))
         self.image.fill((0, 255, 0))
-        self.rect = self.image.get_rect(x=x_pos, y=493)
+        self.rect = self.image.get_rect(x=x_pos, y=518)
         self.direction = direction
 
     def update(self):
@@ -71,9 +86,10 @@ class Ray(pygame.sprite.Sprite):
 
 mars = pygame.image.load("mars.png").convert()
 alien = Alien()
+rover = Rover()
 
 all_sprites = pygame.sprite.Group()
-all_sprites.add(alien)
+all_sprites.add(alien, rover)
 rays = pygame.sprite.Group()
 
 running = True
@@ -99,6 +115,8 @@ while running:
 
     screen.fill((0, 0, 0))
     screen.blit(mars, (0, 400))
+
+    rover.update()
 
     for ray in rays:
         ray.update()

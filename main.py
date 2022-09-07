@@ -26,6 +26,9 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 ADD_ROVER = pygame.USEREVENT + 1
 pygame.time.set_timer(ADD_ROVER, random.randrange(1000, 5000))
 
+ADD_SATELLITE = pygame.USEREVENT + 2
+pygame.time.set_timer(ADD_SATELLITE, 20000)
+
 
 class Alien(pygame.sprite.Sprite):
     SPEED = 20
@@ -63,6 +66,22 @@ class Rover(pygame.sprite.Sprite):
         self.direction = random.choice([RIGHT, LEFT])
         self.rect = self.image.get_rect(y=SCREEN_HEIGHT - 85)
         self.rect.x = 0 - self.rect.width if self.direction == RIGHT else SCREEN_WIDTH
+
+    def update(self):
+        self.rect.move_ip(self.SPEED * self.direction, 0)
+
+        if (self.rect.width < 0) or (self.rect.x > SCREEN_WIDTH):
+            self.kill()
+
+
+class Satellite(pygame.sprite.Sprite):
+    SPEED = 1
+
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("satellite.png").convert_alpha()
+        self.direction = RIGHT
+        self.rect = self.image.get_rect(x=-10, y=100)
 
     def update(self):
         self.rect.move_ip(self.SPEED * self.direction, 0)
@@ -121,6 +140,10 @@ while running:
             rover = Rover()
             all_sprites.add(rover)
             enemies.add(rover)
+        elif event.type == ADD_SATELLITE:
+            satellite = Satellite()
+            all_sprites.add(satellite)
+            enemies.add(satellite)
 
     screen.fill((0, 0, 0))
     screen.blit(mars, (0, 400))

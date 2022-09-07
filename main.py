@@ -59,7 +59,7 @@ class Rover(pygame.sprite.Sprite):
 
     def __init__(self):
         super().__init__()
-        self.image = pygame.image.load("rover.png")
+        self.image = pygame.image.load("rover.png").convert_alpha()
         self.direction = random.choice([RIGHT, LEFT])
         self.rect = self.image.get_rect(y=SCREEN_HEIGHT - 85)
         self.rect.x = 0 - self.rect.width if self.direction == RIGHT else SCREEN_WIDTH

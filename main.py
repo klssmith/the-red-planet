@@ -1,4 +1,5 @@
 import random
+from time import sleep
 
 import pygame
 from pygame.locals import (
@@ -21,6 +22,9 @@ LEFT = -1
 
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+ADD_ROVER = pygame.USEREVENT + 1
+pygame.time.set_timer(ADD_ROVER, random.randrange(1000, 5000))
 
 
 class Alien(pygame.sprite.Sprite):
@@ -86,11 +90,12 @@ class Ray(pygame.sprite.Sprite):
 
 mars = pygame.image.load("mars.png").convert()
 alien = Alien()
-rover = Rover()
 
 all_sprites = pygame.sprite.Group()
-all_sprites.add(alien, rover)
+all_sprites.add(alien)
+
 rays = pygame.sprite.Group()
+enemies = pygame.sprite.Group()
 
 running = True
 
@@ -112,11 +117,16 @@ while running:
 
                 rays.add(ray)
                 all_sprites.add(ray)
+        elif event.type == ADD_ROVER:
+            rover = Rover()
+            all_sprites.add(rover)
+            enemies.add(rover)
 
     screen.fill((0, 0, 0))
     screen.blit(mars, (0, 400))
 
-    rover.update()
+    for enemy in enemies:
+        enemy.update()
 
     for ray in rays:
         ray.update()
@@ -124,8 +134,13 @@ while running:
     for sprite in all_sprites:
         screen.blit(sprite.image, sprite.rect)
 
+    pygame.sprite.groupcollide(enemies, rays, True, True)
+
+    if pygame.sprite.spritecollideany(alien, enemies):
+        running = False
+
     pygame.display.flip()
     clock.tick(FPS)
 
-
+sleep(1)
 pygame.quit()

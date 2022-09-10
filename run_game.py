@@ -41,6 +41,9 @@ pygame.time.set_timer(ADD_BEAM, random.randrange(5000, 10000))
 ADD_ASTEROID = pygame.USEREVENT + 4
 pygame.time.set_timer(ADD_ASTEROID, random.randrange(7000, 11000))
 
+DUST_STORM = pygame.USEREVENT + 5
+pygame.time.set_timer(DUST_STORM, random.randrange(11000, 15000))
+
 
 class Alien(pygame.sprite.Sprite):
     SPEED = 20
@@ -150,6 +153,25 @@ class Beam(pygame.sprite.Sprite):
             self.kill()
 
 
+class Dust(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.Surface((3, 3))
+        self.image.fill((181, 128, 95))
+        self.rect = self.image.get_rect(
+            x=random.randrange(SCREEN_WIDTH), y=random.randrange(SCREEN_HEIGHT)
+        )
+        self.start_time = pygame.time.get_ticks()
+        self.duration = random.randrange(2500, 5000)
+
+    def update(self):
+        self.rect.x = random.randrange(SCREEN_WIDTH)
+        self.rect.y = random.randrange(SCREEN_HEIGHT)
+
+        if pygame.time.get_ticks() - self.start_time > self.duration:
+            self.kill()
+
+
 mars = pygame.image.load("mars.png").convert()
 alien = Alien()
 
@@ -159,6 +181,7 @@ all_sprites.add(alien)
 satellites = pygame.sprite.Group()
 rays = pygame.sprite.Group()
 enemies = pygame.sprite.Group()
+dust_storm = pygame.sprite.Group()
 
 
 class Game:
@@ -192,22 +215,27 @@ class Game:
                     rover = Rover()
                     all_sprites.add(rover)
                     enemies.add(rover)
-                elif event.type == ADD_SATELLITE and self.stage > 0:
+                elif event.type == ADD_SATELLITE and self.stage >= 1:
                     satellite = Satellite()
                     all_sprites.add(satellite)
                     satellites.add(satellite)
                     enemies.add(satellite)
                 elif (
-                    event.type == ADD_BEAM and self.stage >= 1 and satellites.sprites()
+                    event.type == ADD_BEAM and self.stage >= 2 and satellites.sprites()
                 ):
                     firing_satellite = random.choice(satellites.sprites())
                     beam = Beam(x_pos=firing_satellite.rect.x)
                     all_sprites.add(beam)
                     enemies.add(beam)
-                elif event.type == ADD_ASTEROID and self.stage >= 2:
+                elif event.type == ADD_ASTEROID and self.stage >= 3:
                     asteroid = Asteroid()
                     all_sprites.add(asteroid)
                     enemies.add(asteroid)
+                elif event.type == DUST_STORM and self.stage >= 4:
+                    for _ in range(20000):
+                        dust = Dust()
+                        dust_storm.add(dust)
+                        all_sprites.add(dust)
 
             screen.fill((0, 0, 0))
             screen.blit(mars, (0, 400))
@@ -218,12 +246,20 @@ class Game:
             for ray in rays:
                 ray.update()
 
+            for dust in dust_storm:
+                dust.update()
+
             for sprite in all_sprites:
                 screen.blit(sprite.image, sprite.rect)
 
             if pygame.sprite.groupcollide(enemies, rays, True, True):
                 self.score += 1
-                if self.score > 10:
+
+                if self.score > 20:
+                    self.stage = 4
+                elif self.score > 10:
+                    self.stage = 3
+                elif self.score > 5:
                     self.stage = 2
                 elif self.score > 3:
                     self.stage = 1

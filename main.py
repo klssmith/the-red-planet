@@ -116,6 +116,9 @@ all_sprites.add(alien)
 rays = pygame.sprite.Group()
 enemies = pygame.sprite.Group()
 
+stage = 0
+score = 0
+
 running = True
 
 while running:
@@ -140,7 +143,7 @@ while running:
             rover = Rover()
             all_sprites.add(rover)
             enemies.add(rover)
-        elif event.type == ADD_SATELLITE:
+        elif event.type == ADD_SATELLITE and stage > 0:
             satellite = Satellite()
             all_sprites.add(satellite)
             enemies.add(satellite)
@@ -157,7 +160,10 @@ while running:
     for sprite in all_sprites:
         screen.blit(sprite.image, sprite.rect)
 
-    pygame.sprite.groupcollide(enemies, rays, True, True)
+    if pygame.sprite.groupcollide(enemies, rays, True, True):
+        score += 1
+        if score > 3:
+            stage = 1
 
     if pygame.sprite.spritecollideany(alien, enemies):
         running = False

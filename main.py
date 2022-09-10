@@ -16,6 +16,7 @@ pygame.mouse.set_visible(False)
 
 SCREEN_HEIGHT = 600
 SCREEN_WIDTH = 800
+GROUND_LEVEL = SCREEN_HEIGHT - 75  # 525
 FPS = 60
 RIGHT = 1
 LEFT = -1
@@ -27,7 +28,10 @@ ADD_ROVER = pygame.USEREVENT + 1
 pygame.time.set_timer(ADD_ROVER, random.randrange(1000, 5000))
 
 ADD_SATELLITE = pygame.USEREVENT + 2
-pygame.time.set_timer(ADD_SATELLITE, 20000)
+pygame.time.set_timer(ADD_SATELLITE, 10000)
+
+ADD_BEAM = pygame.USEREVENT + 3
+pygame.time.set_timer(ADD_BEAM, random.randrange(5000, 10000))
 
 
 class Alien(pygame.sprite.Sprite):
@@ -37,7 +41,7 @@ class Alien(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.image.load("alien.png").convert_alpha()
         self.rect = self.image.get_rect(
-            center=((SCREEN_WIDTH - self.image.get_width()) / 2, SCREEN_HEIGHT - 75)
+            center=((SCREEN_WIDTH - self.image.get_width()) / 2, GROUND_LEVEL)
         )
         self.direction = RIGHT
 
@@ -107,12 +111,29 @@ class Ray(pygame.sprite.Sprite):
             self.kill()
 
 
+class Beam(pygame.sprite.Sprite):
+    SPEED = 10
+
+    def __init__(self, x_pos):
+        super().__init__()
+        self.image = pygame.Surface((2, 50))
+        self.image.fill((250, 45, 182))
+        self.rect = self.image.get_rect(x=x_pos, top=120)
+
+    def update(self):
+        self.rect.move_ip(0, self.SPEED)
+
+        if self.rect.bottom >= GROUND_LEVEL:
+            self.kill()
+
+
 mars = pygame.image.load("mars.png").convert()
 alien = Alien()
 
 all_sprites = pygame.sprite.Group()
 all_sprites.add(alien)
 
+satellites = pygame.sprite.Group()
 rays = pygame.sprite.Group()
 enemies = pygame.sprite.Group()
 
@@ -151,7 +172,13 @@ class Game:
                 elif event.type == ADD_SATELLITE and self.stage > 0:
                     satellite = Satellite()
                     all_sprites.add(satellite)
+                    satellites.add(satellite)
                     enemies.add(satellite)
+                elif event.type == ADD_BEAM and self.stage > 0 and satellites.sprites():
+                    firing_satellite = random.choice(satellites.sprites())
+                    beam = Beam(x_pos=firing_satellite.rect.x)
+                    all_sprites.add(beam)
+                    enemies.add(beam)
 
             screen.fill((0, 0, 0))
             screen.blit(mars, (0, 400))
@@ -166,7 +193,7 @@ class Game:
                 screen.blit(sprite.image, sprite.rect)
 
             if pygame.sprite.groupcollide(enemies, rays, True, True):
-                self.score += 1
+                self.score += 5
                 if self.score > 3:
                     self.stage = 1
 

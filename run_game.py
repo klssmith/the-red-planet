@@ -38,6 +38,9 @@ pygame.time.set_timer(ADD_SATELLITE, 10000)
 ADD_BEAM = pygame.USEREVENT + 3
 pygame.time.set_timer(ADD_BEAM, random.randrange(5000, 10000))
 
+ADD_ASTEROID = pygame.USEREVENT + 4
+pygame.time.set_timer(ADD_ASTEROID, random.randrange(7000, 11000))
+
 
 class Alien(pygame.sprite.Sprite):
     SPEED = 20
@@ -96,6 +99,21 @@ class Satellite(pygame.sprite.Sprite):
         self.rect.move_ip(self.SPEED * self.direction, 0)
 
         if (self.rect.width < 0) or (self.rect.x > SCREEN_WIDTH):
+            self.kill()
+
+
+class Asteroid(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("asteroid.png").convert_alpha()
+        self.rect = self.image.get_rect(
+            x=random.randrange(-SCREEN_WIDTH, SCREEN_WIDTH), y=0
+        )
+
+    def update(self):
+        self.rect.move_ip(random.randrange(10), random.randrange(5, 10))
+
+        if self.rect.centery >= GROUND_LEVEL:
             self.kill()
 
 
@@ -179,11 +197,17 @@ class Game:
                     all_sprites.add(satellite)
                     satellites.add(satellite)
                     enemies.add(satellite)
-                elif event.type == ADD_BEAM and self.stage > 0 and satellites.sprites():
+                elif (
+                    event.type == ADD_BEAM and self.stage >= 1 and satellites.sprites()
+                ):
                     firing_satellite = random.choice(satellites.sprites())
                     beam = Beam(x_pos=firing_satellite.rect.x)
                     all_sprites.add(beam)
                     enemies.add(beam)
+                elif event.type == ADD_ASTEROID and self.stage >= 2:
+                    asteroid = Asteroid()
+                    all_sprites.add(asteroid)
+                    enemies.add(asteroid)
 
             screen.fill((0, 0, 0))
             screen.blit(mars, (0, 400))
@@ -198,8 +222,10 @@ class Game:
                 screen.blit(sprite.image, sprite.rect)
 
             if pygame.sprite.groupcollide(enemies, rays, True, True):
-                self.score += 5
-                if self.score > 3:
+                self.score += 1
+                if self.score > 10:
+                    self.stage = 2
+                elif self.score > 3:
                     self.stage = 1
 
             if pygame.sprite.spritecollideany(alien, enemies):

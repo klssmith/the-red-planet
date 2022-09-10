@@ -1,5 +1,5 @@
 import random
-from time import sleep
+import sys
 
 import pygame
 from pygame.locals import (
@@ -116,60 +116,86 @@ all_sprites.add(alien)
 rays = pygame.sprite.Group()
 enemies = pygame.sprite.Group()
 
-stage = 0
-score = 0
 
-running = True
+class Game:
+    def __init__(self):
+        self.stage = 0
+        self.score = 0
+        self.running = True
 
-while running:
-    for event in pygame.event.get():
-        if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
-            running = False
-        if event.type == KEYDOWN:
-            if event.key == K_LEFT or event.key == ord("a"):
-                alien.update(direction=LEFT)
-            if event.key == K_RIGHT or event.key == ord("d"):
-                alien.update(direction=RIGHT)
-            if event.key == K_SPACE:
-                if alien.direction == RIGHT:
-                    x_pos = alien.rect.right
-                else:
-                    x_pos = alien.rect.left
-                ray = Ray(x_pos, alien.direction)
+    def play(self):
+        while self.running:
+            for event in pygame.event.get():
+                if event.type == QUIT or (
+                    event.type == KEYDOWN and event.key == K_ESCAPE
+                ):
+                    self.running = False
+                if event.type == KEYDOWN:
+                    if event.key == K_LEFT or event.key == ord("a"):
+                        alien.update(direction=LEFT)
+                    if event.key == K_RIGHT or event.key == ord("d"):
+                        alien.update(direction=RIGHT)
+                    if event.key == K_SPACE:
+                        if alien.direction == RIGHT:
+                            x_pos = alien.rect.right
+                        else:
+                            x_pos = alien.rect.left
+                        ray = Ray(x_pos, alien.direction)
 
-                rays.add(ray)
-                all_sprites.add(ray)
-        elif event.type == ADD_ROVER:
-            rover = Rover()
-            all_sprites.add(rover)
-            enemies.add(rover)
-        elif event.type == ADD_SATELLITE and stage > 0:
-            satellite = Satellite()
-            all_sprites.add(satellite)
-            enemies.add(satellite)
+                        rays.add(ray)
+                        all_sprites.add(ray)
+                elif event.type == ADD_ROVER:
+                    rover = Rover()
+                    all_sprites.add(rover)
+                    enemies.add(rover)
+                elif event.type == ADD_SATELLITE and self.stage > 0:
+                    satellite = Satellite()
+                    all_sprites.add(satellite)
+                    enemies.add(satellite)
 
-    screen.fill((0, 0, 0))
-    screen.blit(mars, (0, 400))
+            screen.fill((0, 0, 0))
+            screen.blit(mars, (0, 400))
 
-    for enemy in enemies:
-        enemy.update()
+            for enemy in enemies:
+                enemy.update()
 
-    for ray in rays:
-        ray.update()
+            for ray in rays:
+                ray.update()
 
-    for sprite in all_sprites:
-        screen.blit(sprite.image, sprite.rect)
+            for sprite in all_sprites:
+                screen.blit(sprite.image, sprite.rect)
 
-    if pygame.sprite.groupcollide(enemies, rays, True, True):
-        score += 1
-        if score > 3:
-            stage = 1
+            if pygame.sprite.groupcollide(enemies, rays, True, True):
+                self.score += 1
+                if self.score > 3:
+                    self.stage = 1
 
-    if pygame.sprite.spritecollideany(alien, enemies):
-        running = False
+            if pygame.sprite.spritecollideany(alien, enemies):
+                self.running = False
 
-    pygame.display.flip()
-    clock.tick(FPS)
+            pygame.display.flip()
+            clock.tick(FPS)
 
-sleep(1)
-pygame.quit()
+        self.game_over()
+
+    def game_over(self):
+        font = pygame.font.Font(None, 64)
+        text = font.render(f"Game Over! You scored {self.score}", True, (181, 128, 95))
+        textpos = text.get_rect(centerx=SCREEN_WIDTH / 2, y=50)
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == QUIT or (
+                    event.type == KEYDOWN and event.key == K_ESCAPE
+                ):
+                    pygame.quit()
+                    sys.exit()
+
+            screen.fill((0, 0, 0))
+            screen.blit(mars, (0, 400))
+            screen.blit(text, textpos)
+            pygame.display.flip()
+
+
+game = Game()
+game.play()

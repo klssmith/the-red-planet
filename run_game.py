@@ -11,6 +11,11 @@ from pygame.locals import (
     QUIT,
 )
 
+MIN_VER = (3, 7)
+
+if sys.version_info[:2] < MIN_VER:
+    sys.exit("This game requires Python {}.{}.".format(*MIN_VER))
+
 pygame.init()
 pygame.mouse.set_visible(False)
 

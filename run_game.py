@@ -28,6 +28,7 @@ LEFT = -1
 
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("The Retro Red Plant of Risk")
 
 ADD_ROVER = pygame.USEREVENT + 1
 pygame.time.set_timer(ADD_ROVER, random.randrange(1000, 5000))
